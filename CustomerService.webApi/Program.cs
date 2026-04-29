@@ -71,6 +71,8 @@ builder.Services.AddScoped<IContext>(provider =>
 builder.Services.AddAutoMapper(typeof(MapperProfile));
 builder.Services.AddServices(builder.Configuration);
 
+builder.Services.AddHostedService<FolderWatcherWorker>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",

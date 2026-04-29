@@ -40,6 +40,6 @@ namespace Repository.Entities
         [ForeignKey("CompanyId")]
         public virtual Company Company { get; set; }
 
-        public virtual ICollection<CallParticipantAnalysis> ParticipantAnalyses { get; set; }
+        public virtual ICollection<Call> Calls { get; set; }
     }
 }

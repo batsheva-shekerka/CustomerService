@@ -13,7 +13,7 @@ namespace Repository.Interfaces
         DbSet<Company> Companies { get; set; }
         DbSet<Operator> Operators { get; set; }
         DbSet<Call> Calls { get; set; }
-        DbSet<CallParticipantAnalysis> CallParticipantAnalyses { get; set; }
+        //DbSet<CallParticipantAnalysis> CallParticipantAnalyses { get; set; }
         DbSet<Score> Scores { get; set; }
 
         // פונקציה לשמירת שינויים

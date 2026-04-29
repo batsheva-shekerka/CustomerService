@@ -17,5 +17,7 @@ namespace Common.Dto
 
         [MaxLength(200)]
         public string? IntroPhrase { get; set; }
+
+        public string? AudioFolderRoute { get; set; }
     }
 }

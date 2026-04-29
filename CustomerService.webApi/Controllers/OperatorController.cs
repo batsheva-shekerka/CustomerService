@@ -47,16 +47,16 @@ namespace CustomerService.webApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] OperatorDto op)
         {
-             await service.AddAsync(op);
-             return Ok(op);
+            var newop= await service.AddAsync(op);
+             return Ok(newop);
         }
 
         // PUT api/<OperatorController>/5
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] OperatorDto op)
         {
-            await service.UpdateAsync(id, op);
-            return Ok(op);
+           var newop= await service.UpdateAsync(id, op);
+            return Ok(newop);
         }
 
         // DELETE api/<OperatorController>/5
@@ -74,9 +74,15 @@ namespace CustomerService.webApi.Controllers
             // 1. בדיקה מול ה-Repository שהמשתמש קיים (דילגתי על זה לצורך הדוגמה)
             //האם המשתמש קיים וכן אימות הסיסמא
             var o= _operatorService.Exist(loginData);
+            // 2. בדיקה האם המשתמש נמצא
+            if (o == null)
+            {
+                // אם לא נמצא (סיסמה שגויה או מייל לא קיים), מחזירים שגיאה מוסדרת ולא קורסים
+                return Unauthorized("אימייל או סיסמה שגויים");
+            }
             // 2. אם המשתמש תקין - קוראים לסרביס לייצר טוקן
             var token = _operatorService.GenerateToken(o);//, "User"
-            return Ok(new { token = token });
+            return Ok(new { token = token ,user=o });
         }
     }
 }

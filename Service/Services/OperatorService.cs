@@ -58,6 +58,11 @@ namespace Service.Services
         //יצירת טוקן
         public string GenerateToken(Operator op)
         {
+            if (op == null)
+            {
+                // טיפול במקרה של null - למשל זריקת שגיאה מפורטת או החזרת null
+                throw new ArgumentNullException(nameof(op), "Operator cannot be null");
+            }
             //המפתח להצפנה
             var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
 

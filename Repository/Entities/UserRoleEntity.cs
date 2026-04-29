@@ -9,6 +9,7 @@ namespace Repository.Entities
         public enum UserRoleEntity
         {
             Operator = 0,
-            Admin = 1
-        }   
+            Admin = 1,
+            SystemManager = 2 
+    }   
 }

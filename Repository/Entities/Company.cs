@@ -19,6 +19,8 @@ namespace Repository.Entities
         [MaxLength(200)]
         public string? IntroPhrase { get; set; }
 
+        public string? AudioFolderRoute { get; set; }
+
         // קשרי גומלין
         public virtual ICollection<Operator> Operators { get; set; }
         public virtual ICollection<Call> Calls { get; set; }

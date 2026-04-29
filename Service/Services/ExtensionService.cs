@@ -34,6 +34,10 @@ namespace Service.Services
             //services.AddScoped<IsExist<Operator>, AuthService>();
             //services.AddScoped<Iservice<CallDto>, CallService>();
             services.AddScoped<Iservice<CompanyDto>, CompanyService>();
+            services.AddScoped<CompanyService>();
+            services.AddScoped<Iservice<CallDto>, CallService>();
+            services.AddScoped<ICallService<CallDto>, CallService>();
+
 
             var endpoint = new Uri(configuration["AzureServices:TextAnalyticsEndpoint"]);
             var credentials = new AzureKeyCredential(configuration["AzureServices:TextAnalyticsKey"]);

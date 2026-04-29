@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Service.Services
+namespace Service.specialservice
 {
     public class AudioSplitter
     {
@@ -17,7 +17,7 @@ namespace Service.Services
         {
             var speakerSegments = segments
                 .Where(s => s.SpeakerId == speakerId)
-                .OrderBy(s => s.Start)
+                .OrderBy(s => s.Offset)
                 .ToList();
 
             if (!speakerSegments.Any())
@@ -29,10 +29,10 @@ namespace Service.Services
             foreach (var seg in speakerSegments)
             {
                 long startByte =
-                    (long)(seg.Start.TotalSeconds * reader.WaveFormat.AverageBytesPerSecond);
+                    (long)(seg.Offset.TotalSeconds * reader.WaveFormat.AverageBytesPerSecond);
 
                 long endByte =
-                    (long)((seg.Start + seg.Duration).TotalSeconds *
+                    (long)((seg.Offset + seg.Duration).TotalSeconds *
                            reader.WaveFormat.AverageBytesPerSecond);
 
                 reader.Position = startByte;

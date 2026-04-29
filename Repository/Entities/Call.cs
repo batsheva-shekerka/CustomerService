@@ -17,18 +17,42 @@ namespace Repository.Entities
         [Required]
         public int CompanyId { get; set; }
 
+        public int? OperatorId { get; set; } // הוספנו כאן ישירות את המפעיל
+
         [Required]
         public DateTime CallDate { get; set; }
 
         public TimeSpan? Duration { get; set; }
 
-        public string? Notes { get; set; }
+        // --- נתוני טלפנית ---
+
+        //תמלול
+        public string? OperatorTranscript { get; set; }
+
+        //רגש בשיחה
+        public string? OperatorSentiment { get; set; }
+
+        //וויליום מקסימלי
+        public double? OperatorMaxVolume { get; set; }
+
+        //מילים לשניה
+        public double? OperatorWordsPerSecond { get; set; }
+
+        // --- נתוני לקוח ---
+        public string? CustomerTranscript { get; set; }
+        public double? CustomerSentimentStart { get; set; } // רגש התחלתי (למשל 0-1)
+        public double? CustomerSentimentEnd { get; set; }   // רגש סופי
+        public double? CustomerMaxVolume { get; set; }
+
+        public string? GeneralNotes { get; set; }
 
         // קשרי גומלין
         [ForeignKey("CompanyId")]
         public virtual Company Company { get; set; }
 
-        public virtual ICollection<CallParticipantAnalysis> CallParticipants { get; set; }
-        public virtual ICollection<Score> Scores { get; set; }
+        [ForeignKey("OperatorId")]
+        public virtual Operator? Operator { get; set; }
+
+        public virtual Score Score { get; set; } // קשר של 1 ל-1 לציון
     }
 }

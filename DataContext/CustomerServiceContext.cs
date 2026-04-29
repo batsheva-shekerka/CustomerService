@@ -25,7 +25,7 @@ namespace DataContext
         public DbSet<Company> Companies { get; set; }
         public DbSet<Operator> Operators { get; set; }
         public DbSet<Call> Calls { get; set; }
-        public DbSet<CallParticipantAnalysis> CallParticipantAnalyses { get; set; }
+        //public DbSet<CallParticipantAnalysis> CallParticipantAnalyses { get; set; }
         public DbSet<Score> Scores { get; set; }
 
 
@@ -45,8 +45,8 @@ namespace DataContext
             // נבטל את המחיקה האוטומטית בין ציון לשיחה כדי למנוע כפילות
             modelBuilder.Entity<Score>()
                 .HasOne(s => s.Call)
-                .WithMany(c => c.Scores)
-                .HasForeignKey(s => s.CallId)
+                .WithOne(c => c.Score)
+                .HasForeignKey<Score>(s => s.CallId)
                 .OnDelete(DeleteBehavior.NoAction); // כאן הפתרון
 
             // אם יש לך קשרים נוספים שגורמים לבעיה, אפשר להוסיף אותם כאן

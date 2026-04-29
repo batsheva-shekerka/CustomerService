@@ -15,6 +15,7 @@ namespace Service.Services
         {
             CreateMap<Operator, OperatorDto>().ReverseMap();
             CreateMap<Company, CompanyDto>().ReverseMap();
+            CreateMap<Call, CallDto>().ReverseMap();
 
         }
     }

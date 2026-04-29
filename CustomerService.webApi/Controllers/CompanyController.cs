@@ -37,23 +37,27 @@ namespace CustomerService.webApi.Controllers
 
         // POST api/<CompanyController>
         [HttpPost]
-        public async Task Post([FromBody] CompanyDto company)
+        public async Task<IActionResult> Post([FromBody] CompanyDto company)
         {
-            await service.AddAsync(company);
+           var newCompany= await service.AddAsync(company);
+            return Ok(newCompany);
         }
 
         // PUT api/<CompanyController>/5
         [HttpPut("{id}")]
-        public async Task Put(int id, [FromBody] CompanyDto company)
+        public async Task<IActionResult> Put(int id, [FromBody] CompanyDto company)
         {
-            await service.UpdateAsync(id, company);
+            var newCompany = await service.UpdateAsync(id, company);
+            return Ok(newCompany);
         }
 
         // DELETE api/<CompanyController>/5
         [HttpDelete("{id}")]
-        public async Task Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             await service.DeleteAsync(id);
+            return NoContent();
+
         }
     }
 }

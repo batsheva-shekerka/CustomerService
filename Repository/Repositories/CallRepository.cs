@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Repository.Repositories
 {          
-    public class CallRepository : IRepository<Call>
+    public class CallRepository : IRepository<Call>,ICallRepository<Call>
     {
 
         private readonly IContext ctx;
@@ -47,6 +47,14 @@ namespace Repository.Repositories
             return item;
         }
 
+
+        public async Task<IEnumerable<Call>> GetByIdOperatorAsync(int id)
+        {
+            return await ctx.Calls.Where(x=>x.OperatorId==id).ToListAsync();
+
+        }
+
+       
     }
 
 }

@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Common.Dto;
+using Microsoft.AspNetCore.Mvc;
 using Repository.Entities;
 using Repository.Interfaces;
+using Service.Interfaces;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -10,46 +12,55 @@ namespace CustomerService.webApi.Controllers
     [ApiController]
     public class CallController : ControllerBase
     {
-        private readonly IRepository<Call> repository;
+        private readonly Iservice<CallDto> service;
+        private readonly ICallService<CallDto> callService;
 
-        public CallController(IRepository<Call> repository)
+        public CallController(Iservice<CallDto> service, ICallService<CallDto> callService)
         {
-            this.repository = repository;
+            this.service = service;
+            this.callService = callService;
         }
 
         // GET: api/<CallController>
         [HttpGet]
-        public async Task<IEnumerable<Call>> Get()
+        public async Task<IEnumerable<CallDto>> Get()
         {
-            return await repository.GetAllAsync();
+            return await service.GetAllAsync();
         }
 
         // GET api/<CallController>/5
         [HttpGet("{id}")]
-        public async Task<Call> Get(int id)
+        public async Task<CallDto> Get(int id)
         {
-            return await repository.GetByIdAsync(id);
+            return await service.GetByIdAsync(id);
         }
 
         // POST api/<CallController>
         [HttpPost]
-        public async void Post([FromBody] Call call)
+        public async void Post([FromBody] CallDto call)
         {
-            await repository.AddAsync(call);
+            await service.AddAsync(call);
         }
 
         // PUT api/<CallController>/5
         [HttpPut("{id}")]
-        public async Task Put(int id, [FromBody] Call call)
+        public async Task Put(int id, [FromBody] CallDto call)
         {
-            await repository.UpdateAsync(id,call);
+            await service.UpdateAsync(id,call);
         }
 
         // DELETE api/<CallController>/5
         [HttpDelete("{id}")]
         public async Task Delete(int id)
         {
-            await repository.DeleteAsync(id);
+            await service.DeleteAsync(id);
+        }
+
+
+        [HttpGet("operator/{id}")]
+        public async Task<IEnumerable<CallDto>> GetByIdOperator(int id)
+        {
+            return await callService.GetAllByOperatorAsync(id);
         }
     }
 }

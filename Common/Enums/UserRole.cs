@@ -9,6 +9,7 @@ namespace Common.Enums
     public enum UserRole
     {
         Operator = 0,
-        Admin = 1
+        Admin = 1,
+        SystemManager = 2
     }
 }
