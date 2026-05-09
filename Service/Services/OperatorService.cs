@@ -19,18 +19,21 @@ using DataContext;
 
 namespace Service.Services
 {
-    public class OperatorService : Iservice<OperatorDto>,IsExist<Operator>
+    public class OperatorService : Iservice<OperatorDto>,IsExist<Operator>, IOperatorService
     {
         private readonly IRepository<Operator> repository;
+        private readonly IOperatorRepository operatorRepository;
+
         private readonly IMapper mapper;
         private readonly IConfiguration _configuration;
         //public readonly IsExist<OperatorDto> isExist;
         private readonly CustomerServiceContext _context;
 
 
-        public OperatorService(IRepository<Operator> repository, IMapper map, IConfiguration configuration, CustomerServiceContext context)// IsExist<OperatorDto> isExist,
+        public OperatorService(IRepository<Operator> repository, IMapper map, IConfiguration configuration, CustomerServiceContext context,IOperatorRepository operatorRepository)// IsExist<OperatorDto> isExist,
         {
             this.repository = repository;
+            this.operatorRepository=operatorRepository;
             this.mapper = map;
             this._configuration = configuration;
             //this.isExist = isExist;
@@ -124,6 +127,12 @@ namespace Service.Services
        public async Task DeleteAsync(int id) 
         {
             await repository.DeleteAsync(id);
+        }
+
+        public async Task<IEnumerable<object>> GetAllMonthScoreAsync(int id)
+        {
+           var scores = await operatorRepository.GetAllMonthScoreAsync(id);
+            return mapper.Map<List<ScoreDto>>(scores);
         }
     }
 }

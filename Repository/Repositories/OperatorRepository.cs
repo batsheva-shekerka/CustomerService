@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Repository.Repositories
 {
-    public class OperatorRepository : IRepository<Operator>
+    public class OperatorRepository : IRepository<Operator>,IOperatorRepository
     {
 
         private readonly IContext ctx;
@@ -47,5 +47,20 @@ namespace Repository.Repositories
             return item;
         }
 
+        public async Task<IEnumerable<object>> GetAllMonthScoreAsync(int id)
+        {
+            // שליפת המפעיל כולל הנתונים הקשורים
+            var scores = await ctx.Calls
+                .Where(c => c.OperatorId == id && c.Score != null)
+                .OrderBy(c => c.CallDate)
+                .Select(c => new
+                {
+                    Date = c.CallDate,
+                    Score = c.Score.OverallScore
+                })
+                .ToListAsync(); // כאן מתבצעת הפעולה האסינכרונית מול ה-DB
+
+            return scores;
+        }
     }
 }

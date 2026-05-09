@@ -14,6 +14,7 @@ namespace CustomerService.webApi.Controllers
     public class OperatorController : ControllerBase
     {
         private readonly Iservice<OperatorDto> service;
+        private readonly IOperatorService operatorService;
         //private readonly IRepository<Operator> repository;
         //private readonly IsExist<Operator> _isExist;
         private readonly OperatorService _operatorService;
@@ -21,17 +22,18 @@ namespace CustomerService.webApi.Controllers
         //private readonly IAuthService _authService;
 
         // כאן אנחנו מקבלים את הכל מהמערכת
-        public OperatorController(Iservice<OperatorDto> service, OperatorService operatorService)//, IAuthService authService, IsExist<Operator> isExist
+        public OperatorController(Iservice<OperatorDto> service, OperatorService operatorService,IOperatorService operatorService1)//, IAuthService authService, IsExist<Operator> isExist
         {
             this.service = service;
             //this._isExist = isExist;
-            _operatorService = operatorService;
+            this._operatorService = operatorService;
+            this.operatorService = operatorService1;
             //this._authService = authService;
         }
         // GET: api/<OperatorController>
         [HttpGet]
-       // [Authorize(Roles = "Admin")]
-        public async  Task<IEnumerable<OperatorDto>> Get()
+        // [Authorize(Roles = "Admin")]
+        public async Task<IEnumerable<OperatorDto>> Get()
         {
             return await service.GetAllAsync();
         }
@@ -47,15 +49,15 @@ namespace CustomerService.webApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] OperatorDto op)
         {
-            var newop= await service.AddAsync(op);
-             return Ok(newop);
+            var newop = await service.AddAsync(op);
+            return Ok(newop);
         }
 
         // PUT api/<OperatorController>/5
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] OperatorDto op)
         {
-           var newop= await service.UpdateAsync(id, op);
+            var newop = await service.UpdateAsync(id, op);
             return Ok(newop);
         }
 
@@ -73,7 +75,7 @@ namespace CustomerService.webApi.Controllers
 
             // 1. בדיקה מול ה-Repository שהמשתמש קיים (דילגתי על זה לצורך הדוגמה)
             //האם המשתמש קיים וכן אימות הסיסמא
-            var o= _operatorService.Exist(loginData);
+            var o = _operatorService.Exist(loginData);
             // 2. בדיקה האם המשתמש נמצא
             if (o == null)
             {
@@ -82,7 +84,14 @@ namespace CustomerService.webApi.Controllers
             }
             // 2. אם המשתמש תקין - קוראים לסרביס לייצר טוקן
             var token = _operatorService.GenerateToken(o);//, "User"
-            return Ok(new { token = token ,user=o });
+            return Ok(new { token = token, user = o });
+        }
+
+        [HttpGet("/GetAllMonthScore/{id}")]
+        public async Task<IActionResult> GetAllMonthScore(int id)
+        {
+            var scores = await operatorService.GetAllMonthScoreAsync(id);
+            return Ok(scores);
         }
     }
 }

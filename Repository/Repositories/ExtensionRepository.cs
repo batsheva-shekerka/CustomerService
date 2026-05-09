@@ -19,6 +19,7 @@ namespace Repository.Repositories
             services.AddScoped<IRepository<Company>,CompanyRepository >();
             services.AddScoped<IRepository<Score>, ScoreRepository>();
             services.AddScoped<IRepository<Operator>, OperatorRepository>();
+            services.AddScoped<IOperatorRepository, OperatorRepository>();
 
             return services;
         }
