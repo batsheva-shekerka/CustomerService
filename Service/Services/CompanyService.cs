@@ -3,6 +3,7 @@ using Common.Dto;
 using DataContext;
 using Repository.Entities;
 using Repository.Interfaces;
+using Repository.Repositories;
 using Service.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -12,14 +13,16 @@ using System.Threading.Tasks;
 
 namespace Service.Services
 {
-    public class CompanyService:Iservice<CompanyDto>
+    public class CompanyService:Iservice<CompanyDto>,ICompanyService
     {
         private readonly IRepository<Company> repository;
+        private readonly ICompanyRepository companyRepository;
         private readonly IMapper mapper;
         private readonly CustomerServiceContext _context;
 
-        public CompanyService(IRepository<Company> repository,IMapper mapper,CustomerServiceContext context)
+        public CompanyService(IRepository<Company> repository,IMapper mapper,CustomerServiceContext context,ICompanyRepository companyRepository)
         {
+            this.companyRepository = companyRepository;
             this.repository = repository;
             this.mapper = mapper;
             this._context = context;
@@ -55,7 +58,11 @@ namespace Service.Services
             await repository.DeleteAsync(id);
         }
 
-        
+        public async Task<List<ScoreDto>> GetWeeklyImprovementAsync(int id)
+        {
+            var rep = await companyRepository.GetWeeklyImprovementAsync(id);
+            return mapper.Map<List<ScoreDto>>(rep);
+        }
 
     }
 }

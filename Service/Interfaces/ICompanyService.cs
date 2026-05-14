@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace Service.Interfaces
 {
-    public interface ICallService<T>
+    public interface ICompanyService
     {
-        Task<List<T>> GetAllByOperatorAsync(int id);
-        Task<ScoreCompanyDto> GetDailyImprovementAsync(int id);
-
+        Task<List<ScoreDto>> GetWeeklyImprovementAsync(int id);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Repository.Entities;
+﻿using Common.Dto;
+using Repository.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,7 @@ namespace Repository.Interfaces
     public interface ICallRepository<T>
     {
         Task<IEnumerable<Call>> GetByIdOperatorAsync(int id);
+        Task<ScoreCompanyDto> GetDailyImprovementAsync(int id);
+
     }
 }

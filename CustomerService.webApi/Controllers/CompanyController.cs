@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Repository.Entities;
 using Repository.Interfaces;
 using Service.Interfaces;
+using Service.Services;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,10 +16,13 @@ namespace CustomerService.webApi.Controllers
         //private readonly IRepository<Company> repository;
 
         private readonly Iservice<CompanyDto> service;
-        public CompanyController(Iservice<CompanyDto>service)//IRepository<Company> repository,
+        private readonly ICompanyService companyService;
+
+        public CompanyController(Iservice<CompanyDto>service, ICompanyService companyService)//IRepository<Company> repository,
         {
             //this.repository = repository;
             this.service = service;
+            this.companyService = companyService;
         }
         // GET: api/<CompanyController>
         [HttpGet]
@@ -58,6 +62,13 @@ namespace CustomerService.webApi.Controllers
             await service.DeleteAsync(id);
             return NoContent();
 
+        }
+
+        [HttpGet("GetWeeklyImprovement/{id}")]
+        public async Task<IActionResult> GetWeeklyImprovement(int id)
+        {
+            var scores = await companyService.GetWeeklyImprovementAsync(id);
+            return Ok(scores);
         }
     }
 }

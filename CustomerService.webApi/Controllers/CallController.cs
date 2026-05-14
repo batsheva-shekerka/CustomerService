@@ -62,5 +62,11 @@ namespace CustomerService.webApi.Controllers
         {
             return await callService.GetAllByOperatorAsync(id);
         }
+
+        [HttpGet("GetDailyImprovement/{id}")]
+        public async Task<ScoreCompanyDto> GetDailyImprovementAsync(int id)
+        {
+            return await callService.GetDailyImprovementAsync(id);
+        }
     }
 }

@@ -63,7 +63,11 @@ namespace Service.Services
             return mapper.Map<List<CallDto>>(rep);
         }
 
-
+        public async Task<ScoreCompanyDto> GetDailyImprovementAsync(int id)
+        {
+            var rep = await callRepository.GetDailyImprovementAsync(id);
+            return mapper.Map<ScoreCompanyDto>(rep);
+        }
 
         //    //תמלול השיחה וחלוקה ללקוח וטלפנית
         //    public async Task totext()

@@ -324,8 +324,11 @@ public class CallAnalysisService
 
         // 1. ציון טון (מבוסס על סנטימנט הנציגה ו-ווליום)
         // אם הנציגה הייתה חיובית והווליום לא צורח - ציון גבוה
-        double toneBase = (call.OperatorSentiment == "Positive") ? 100 : 60;
-        score.OperatorToneScore = (call.OperatorMaxVolume < 0.8) ? toneBase : toneBase - 20;
+        //double toneBase = (call.OperatorSentiment == "Positive") ? 100 : 60;
+        double toneBase =(double)(100 - call.OperatorMaxVolume*10);
+        toneBase -= (double)(call.CustomerMaxVolume * 5);
+        //score.OperatorToneScore = (call.OperatorMaxVolume < 0.8) ? toneBase : toneBase - 20;
+        score.OperatorToneScore = toneBase;
 
         // 2. פתרון קונפליקטים (השינוי ברגש הלקוח)
         // חישוב: רגש סוף פחות רגש התחלה. אם הסוף חיובי יותר מההתחלה - הציון עולה.
@@ -334,10 +337,30 @@ public class CallAnalysisService
 
         // 3. מקצועיות (למשל: מהירות דיבור אופטימלית)
         // נניח שבין 2 ל-3 מילים בשנייה זה אידיאלי
-        score.ProfessionalismScore = (call.OperatorWordsPerSecond >= 2.0 && call.OperatorWordsPerSecond <= 3.5) ? 100 : 70;
+        double fast = 100 - (double)(call.OperatorWordsPerSecond * 10);
+        bool due = call.Duration <= TimeSpan.FromMinutes(3);
+        score.ProfessionalismScore = fast+((due)?fast/100*10:0);
+        //score.ProfessionalismScore = (call.OperatorWordsPerSecond >= 2.0 && call.OperatorWordsPerSecond <= 3.5) ? 100 : 70;
 
         // 4. ציון סופי משוקלל
         score.OverallScore = (score.OperatorToneScore + score.ConflictResolutionScore + score.ProfessionalismScore) / 3;
+        double min = Math.Min((double)score.OperatorToneScore, (double)score.ConflictResolutionScore);
+        min = Math.Min(min, (double)score.ProfessionalismScore);
+        if (min == (double)score.ProfessionalismScore)
+        {
+            score.ImprovementTips = ImprovementTipsEntity.ConflictResolution;
+        }
+        else
+        {
+            if (min == (double)score.OperatorToneScore)
+            {
+                score.ImprovementTips = ImprovementTipsEntity.Clarity;
+            }
+            else
+            {
+                score.ImprovementTips = ImprovementTipsEntity.TechnicalKnowledge;
+            }
+        }
 
         return score;
     }

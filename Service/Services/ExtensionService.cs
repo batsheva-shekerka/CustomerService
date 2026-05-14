@@ -38,6 +38,8 @@ namespace Service.Services
             services.AddScoped<Iservice<CallDto>, CallService>();
             services.AddScoped<ICallService<CallDto>, CallService>();
             services.AddScoped<IOperatorService, OperatorService>();
+            services.AddScoped<ICompanyService, CompanyService>();
+
 
 
             var endpoint = new Uri(configuration["AzureServices:TextAnalyticsEndpoint"]);

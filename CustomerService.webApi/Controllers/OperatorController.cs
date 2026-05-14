@@ -87,11 +87,39 @@ namespace CustomerService.webApi.Controllers
             return Ok(new { token = token, user = o });
         }
 
-        [HttpGet("/GetAllMonthScore/{id}")]
+        [HttpGet("GetAllMonthScore/{id}")]
         public async Task<IActionResult> GetAllMonthScore(int id)
         {
             var scores = await operatorService.GetAllMonthScoreAsync(id);
             return Ok(scores);
         }
+
+        [HttpGet("GetMonthlyImprovement/{id}")]
+        public async Task<IActionResult> GetMonthlyImprovement(int id)
+        {
+            var scores = await operatorService.GetMonthlyImprovementAsync(id);
+            return Ok(scores);
+        }
+
+        [HttpGet("GetDalyImprovementTips/{id}")]
+        public async Task<IActionResult> GetDalyImprovementTips(int id)
+        {
+            var scores = await operatorService.GetDailyImprovementTips(id);
+            return Ok(scores);
+        }
+        [HttpGet("GetAverageDayScore/{id}")]
+        public async Task<IActionResult> GetAverageDayScore(int id)
+        {
+            var scores = await operatorService.GetAverageDayScoreAsync(id);
+            return Ok(scores);
+        }
+
+        [HttpGet("GetWeeklyImprovement/{id}")]
+        public async Task<IActionResult> GetWeeklyImprovement(int id)
+        {
+            var scores = await operatorService.GetWeeklyImprovementAsync(id);
+            return Ok(scores);
+        }
+
     }
 }

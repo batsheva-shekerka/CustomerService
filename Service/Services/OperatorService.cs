@@ -16,6 +16,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using DataContext;
+using Common.Enums;
 
 namespace Service.Services
 {
@@ -129,9 +130,32 @@ namespace Service.Services
             await repository.DeleteAsync(id);
         }
 
-        public async Task<IEnumerable<object>> GetAllMonthScoreAsync(int id)
+        public async Task<IEnumerable<ScoreDto>> GetAllMonthScoreAsync(int id)
         {
            var scores = await operatorRepository.GetAllMonthScoreAsync(id);
+            return mapper.Map<List<ScoreDto>>(scores);
+        }
+        public async  Task<IEnumerable<object>> GetMonthlyImprovementAsync(int id)
+        {
+            var scores = await operatorRepository.GetAllMonthScoreAsync(id);
+            return mapper.Map<List<ScoreDto>>(scores);
+        }
+
+        public async Task<IEnumerable<object>> GetAverageDayScoreAsync(int id)
+        {
+            var scores = await operatorRepository.GetAverageDayScoreAsync(id);
+            return scores.ToList(); // אין צורך ב-mapper.Map
+        }
+
+        public async Task<List<ImprovementTips>> GetDailyImprovementTips(int id)
+        {
+            var scores = await operatorRepository.GetDailyImprovementTips(id);
+            return mapper.Map<List<ImprovementTips>>(scores);
+        }
+
+        public async Task<IEnumerable<object>> GetWeeklyImprovementAsync(int id)
+        {
+            var scores = await operatorRepository.GetAllMonthScoreAsync(id);
             return mapper.Map<List<ScoreDto>>(scores);
         }
     }
