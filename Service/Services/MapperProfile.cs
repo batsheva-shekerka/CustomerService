@@ -17,6 +17,7 @@ namespace Service.Services
             CreateMap<Company, CompanyDto>().ReverseMap();
             CreateMap<Call, CallDto>().ReverseMap();
             CreateMap<Score, ScoreDto>().ReverseMap();
+            CreateMap<Score, ScoreDto>().ReverseMap();
 
         }
     }

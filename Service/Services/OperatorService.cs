@@ -141,7 +141,7 @@ namespace Service.Services
             return mapper.Map<List<ScoreDto>>(scores);
         }
 
-        public async Task<IEnumerable<object>> GetAverageDayScoreAsync(int id)
+        public async Task<IEnumerable<DailyOperatorDto>> GetAverageDayScoreAsync(int id)
         {
             var scores = await operatorRepository.GetAverageDayScoreAsync(id);
             return scores.ToList(); // אין צורך ב-mapper.Map
@@ -155,8 +155,9 @@ namespace Service.Services
 
         public async Task<IEnumerable<object>> GetWeeklyImprovementAsync(int id)
         {
-            var scores = await operatorRepository.GetAllMonthScoreAsync(id);
-            return mapper.Map<List<ScoreDto>>(scores);
+            var scores = await operatorRepository.GetWeeklyImprovementAsync(id);
+            return scores.ToList();
+            //return mapper.Map<List<DailyOperatorDto>>(scores);
         }
     }
 }

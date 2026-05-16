@@ -13,7 +13,7 @@ namespace Service.Interfaces
         Task<IEnumerable<ScoreDto>> GetAllMonthScoreAsync(int id);
 
         Task<IEnumerable<object>> GetMonthlyImprovementAsync(int id);
-        Task<IEnumerable<object>> GetAverageDayScoreAsync(int id);
+        Task<IEnumerable<DailyOperatorDto>> GetAverageDayScoreAsync(int id);
         Task<List<ImprovementTips>> GetDailyImprovementTips(int id);
         Task<IEnumerable<object>> GetWeeklyImprovementAsync(int id);
 

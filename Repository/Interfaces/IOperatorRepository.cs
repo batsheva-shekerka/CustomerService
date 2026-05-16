@@ -14,11 +14,11 @@ namespace Repository.Interfaces
 
         Task<IEnumerable<object>> GetMonthlyImprovementAsync(int id);
 
-        Task<IEnumerable<ScoreDto>> GetAverageDayScoreAsync(int id, DateTime? todayy = null);
+        Task<IEnumerable<DailyOperatorDto>> GetAverageDayScoreAsync(int id, DateTime? todayy = null);
 
         Task<IEnumerable<object>> GetDailyImprovementTips(int id);
 
-        Task<IEnumerable<ScoreDto>> GetWeeklyImprovementAsync(int id);
+        Task<IEnumerable<DailyOperatorDto>> GetWeeklyImprovementAsync(int id);
 
 
 
