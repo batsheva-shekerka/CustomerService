@@ -58,10 +58,10 @@ namespace Service.Services
             await repository.DeleteAsync(id);
         }
 
-        public async Task<List<ScoreDto>> GetWeeklyImprovementAsync(int id)
+        public async Task<List<ScoreCompanyDto>> GetWeeklyImprovementAsync(int id)
         {
             var rep = await companyRepository.GetWeeklyImprovementAsync(id);
-            return mapper.Map<List<ScoreDto>>(rep);
+            return rep.ToList();
         }
 
     }

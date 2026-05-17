@@ -48,7 +48,7 @@ namespace Repository.Repositories
             return item;
         }
 
-        public async Task<IEnumerable<ScoreDto>> GetAverageDayScoreAsync(int id, DateTime? todayy = null)
+        public async Task<IEnumerable<ScoreCompanyDto>> GetAverageDayScoreAsync(int id, DateTime? todayy = null)
         {
             var today = todayy ?? DateTime.Today;
             var tomorrow = today.AddDays(1);
@@ -59,21 +59,23 @@ namespace Repository.Repositories
                        && c.CallDate >= today
                        && c.CallDate < tomorrow)
                 .GroupBy(c => new { c.CallDate.Year, c.CallDate.Month, c.CallDate.Day })
-                .Select(g => new ScoreDto // יצירה ישירה של ה-DTO
+                .Select(g => new ScoreCompanyDto // יצירה ישירה של ה-DTO
                 {
                     //Day = g.Key.Day + "/" + g.Key.Month,
                     OperatorToneScore = g.Average(x => x.Score.OperatorToneScore),
                     ConflictResolutionScore = g.Average(x => x.Score.ConflictResolutionScore),
                     ProfessionalismScore = g.Average(x => x.Score.ProfessionalismScore),
-                    OverallScore = g.Average(x => x.Score.OverallScore)
+                    OverallScore = g.Average(x => x.Score.OverallScore),
+                    DayName = new DateTime(g.Key.Year, g.Key.Month, g.Key.Day).DayOfWeek,
+                    TotalCalls= g.Count(),
                 })
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<ScoreDto>> GetWeeklyImprovementAsync(int id)
+        public async Task<IEnumerable<ScoreCompanyDto>> GetWeeklyImprovementAsync(int id)
         {
             var today = DateTime.Today;
-            var weeklist = new List<ScoreDto>();
+            var weeklist = new List<ScoreCompanyDto>();
             for (int i = 0; i < 7; i++)
             {
                 var day = await GetAverageDayScoreAsync(id, today);

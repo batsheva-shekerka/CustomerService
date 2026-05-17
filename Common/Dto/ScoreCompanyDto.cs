@@ -20,6 +20,7 @@ namespace Common.Dto
         public double? ProfessionalismScore { get; set; }
         public double? OverallScore { get; set; }
         public int? TotalCalls { get; set; }
+        public DayOfWeek? DayName { get; set; }
 
 
     }

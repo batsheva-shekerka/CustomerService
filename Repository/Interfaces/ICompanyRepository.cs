@@ -10,8 +10,8 @@ namespace Repository.Interfaces
     public interface ICompanyRepository
     {
         //Task<IEnumerable<ScoreDto>> GetDailyImprovementAsync(int id);
-        Task<IEnumerable<ScoreDto>> GetWeeklyImprovementAsync(int id);
-        Task<IEnumerable<ScoreDto>> GetAverageDayScoreAsync(int id, DateTime? todayy = null);
+        Task<IEnumerable<ScoreCompanyDto>> GetWeeklyImprovementAsync(int id);
+        Task<IEnumerable<ScoreCompanyDto>> GetAverageDayScoreAsync(int id, DateTime? todayy = null);
 
 
 

@@ -9,6 +9,6 @@ namespace Service.Interfaces
 {
     public interface ICompanyService
     {
-        Task<List<ScoreDto>> GetWeeklyImprovementAsync(int id);
+        Task<List<ScoreCompanyDto>> GetWeeklyImprovementAsync(int id);
     }
 }
