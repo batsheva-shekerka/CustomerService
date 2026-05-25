@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Common.Dto;
+using System.Diagnostics.Metrics;
 
 
 namespace Repository.Repositories
@@ -42,12 +43,19 @@ namespace Repository.Repositories
 
         }
 
+        public async Task<IEnumerable<Operator>> GetByCompanyIdAsync(int id)
+        {
+            return await ctx.Operators.Where(x => x.CompanyId == id).ToListAsync();
+        }
+
+
         public async Task<Operator> UpdateAsync(int id, Operator item)
         {
             await ctx.SaveChangesAsync();
             return item;
         }
 
+        //retrieving all scores for all calls -- gonna be weekly
         public async Task<IEnumerable<Score>> GetAllMonthScoreAsync(int id)
         {
             // שליפת הציונים של כל השיחות השייכות למפעיל הספציפי
@@ -59,7 +67,69 @@ namespace Repository.Repositories
 
             return scores;
         }
+        public async Task<IEnumerable<DailyOperatorDto>> GetAllWeekScoreAsync(int id, DateTime? todayy = null)
+        {
+            var today = todayy ?? DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var oneWeekAgo = today.AddDays(-7); // הגדרת נקודת ההתחלה - שבוע אחורה
 
+            // ספירת כל השיחות של הטלפנית במהלך כל השבוע החולף
+            var countOfWeeklyCalls = await ctx.Calls
+                .Where(c => c.OperatorId == id
+                       && c.Score != null
+                       && c.CallDate >= oneWeekAgo
+                       && c.CallDate < tomorrow)
+                .CountAsync();
+
+            return await ctx.Calls
+                .Where(c => c.OperatorId == id
+                       && c.Score != null
+                       && c.CallDate >= oneWeekAgo
+                       && c.CallDate < tomorrow)
+                .Select(g => new DailyOperatorDto // שימוש ב-DTO הקיים
+                {
+                    OperatorToneScore = g.Score.OperatorToneScore,
+                    ConflictResolutionScore = g.Score.ConflictResolutionScore,
+                    ProfessionalismScore = g.Score.ProfessionalismScore,
+                    OverallScore = g.Score.OverallScore,
+                    ScoreId = g.Score.ScoreId,
+                    GeneralNotes=g.GeneralNotes,
+                    // שימי לב: השדה הזה יציג כעת את סך כל השיחות השבועיות 
+                    SumDailyCalls = countOfWeeklyCalls,
+
+                    // שליפת יום בשבוע דינמי לפי תאריך השיחה עצמה
+                    DayName = g.CallDate.DayOfWeek
+                })
+                .ToListAsync();
+        }
+        public async Task<IEnumerable<DailyOperatorDto>> GetAlldayScoreAsync(int id, DateTime? todayy = null)
+        {
+            var today = todayy ?? DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var countOfCalls = await ctx.Calls
+                .Where(c => c.OperatorId == id
+                       && c.Score != null
+                       && c.CallDate >= today
+                       && c.CallDate < tomorrow).CountAsync();
+            return await ctx.Calls
+                .Where(c => c.OperatorId == id
+                       && c.Score != null
+                       && c.CallDate >= today
+                       && c.CallDate < tomorrow)
+                .Select(g => new DailyOperatorDto // יצירה ישירה של ה-DTO
+                {                    
+                    OperatorToneScore = g.Score.OperatorToneScore,
+                    ConflictResolutionScore = g.Score.ConflictResolutionScore,
+                    ProfessionalismScore = g.Score.ProfessionalismScore,
+                    OverallScore = g.Score.OverallScore,
+                    SumDailyCalls = countOfCalls,
+                    ScoreId= g.Score.ScoreId,
+                    GeneralNotes = g.GeneralNotes,
+                    DayName = new DateTime(today.Year, today.Month, today.Day).DayOfWeek
+                })
+                .ToListAsync();
+        }
+        //retrieving all scores for the past month
         public async Task<IEnumerable<object>> GetMonthlyImprovementAsync(int id)
         {
             var monthlyData = await ctx.Calls

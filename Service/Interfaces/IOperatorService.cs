@@ -16,6 +16,8 @@ namespace Service.Interfaces
         Task<IEnumerable<DailyOperatorDto>> GetAverageDayScoreAsync(int id);
         Task<List<ImprovementTips>> GetDailyImprovementTips(int id);
         Task<IEnumerable<object>> GetWeeklyImprovementAsync(int id);
+        Task<IEnumerable<DailyOperatorDto>> GetAllDayScoreAsync(int id);
+        Task<IEnumerable<DailyOperatorDto>> GetAllWeekScoreAsync(int id);
 
     }
 }

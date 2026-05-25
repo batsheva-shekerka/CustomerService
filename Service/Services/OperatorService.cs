@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DataContext;
 using Common.Enums;
+using Microsoft.CognitiveServices.Speech.Transcription;
 
 namespace Service.Services
 {
@@ -42,7 +43,7 @@ namespace Service.Services
         }
 
         public async Task<List<OperatorDto>> GetAllAsync()
-        {
+        {          
             var rep = await repository.GetAllAsync();
             return  mapper.Map<List<OperatorDto>>(rep);
         }
@@ -76,9 +77,9 @@ namespace Service.Services
             var claims = new[] {
             new Claim(ClaimTypes.Email,op.Mail),
             new Claim(ClaimTypes.Name,op.FirstName),
-            new Claim(ClaimTypes.Email,op.LastName),
-            new Claim(ClaimTypes.Role, op.Role.ToString())
-            //new Claim(ClaimTypes.GivenName,user.GivenName)
+            new Claim(ClaimTypes.Surname,op.LastName),
+            new Claim(ClaimTypes.Role, op.Role.ToString()),
+            new Claim("CompanyId", op.CompanyId.ToString())  
             };
             var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"],
                 claims,
@@ -95,6 +96,12 @@ namespace Service.Services
             var operatorEntity = await repository.GetByIdAsync(id);
 
             return mapper.Map<OperatorDto>(operatorEntity);
+        }
+        public async Task<IEnumerable<OperatorDto>> GetByCompanyIdAsync(int id)
+        {
+            var operatorEntity = await operatorRepository.GetByCompanyIdAsync(id);
+
+            return mapper.Map<List<OperatorDto>>(operatorEntity);
         }
         public async Task<OperatorDto> AddAsync(OperatorDto item) 
         {
@@ -159,5 +166,18 @@ namespace Service.Services
             return scores.ToList();
             //return mapper.Map<List<DailyOperatorDto>>(scores);
         }
+
+        public async Task<IEnumerable<DailyOperatorDto>> GetAllWeekScoreAsync(int id)
+        {
+            var scores = await operatorRepository.GetAllWeekScoreAsync(id);
+            return scores.ToList(); // אין צורך ב-mapper.Map
+        }
+        public async Task<IEnumerable<DailyOperatorDto>> GetAllDayScoreAsync(int id)
+        {
+            var scores = await operatorRepository.GetAlldayScoreAsync(id);
+            return scores.ToList(); // אין צורך ב-mapper.Map
+        }
+
+
     }
 }

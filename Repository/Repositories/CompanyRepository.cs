@@ -42,10 +42,21 @@ namespace Repository.Repositories
         }
 
         public async Task<Company> UpdateAsync(int id, Company item)
-        {
-            ctx.Companies.Update(item);
-            await ctx.SaveChangesAsync();
-            return item;
+        {         
+                // 1. נמשוך את החברה הקיימת מהמסד
+                var existingCompany = await ctx.Companies.FindAsync(id);
+
+                if (existingCompany == null) return null;
+
+                // 2. נעדכן רק את השדות הרלוונטיים
+                existingCompany.CompanyName = item.CompanyName;
+                existingCompany.IntroPhrase = item.IntroPhrase;
+                existingCompany.AudioFolderRoute = item.AudioFolderRoute;
+
+                // 3. נשמור (אין צורך ב-Update, ה-EF כבר עוקב אחרי existingCompany)
+                await ctx.SaveChangesAsync();
+
+                return existingCompany;            
         }
 
         public async Task<IEnumerable<ScoreCompanyDto>> GetAverageDayScoreAsync(int id, DateTime? todayy = null)

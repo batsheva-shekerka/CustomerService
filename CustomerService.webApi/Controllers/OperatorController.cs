@@ -5,6 +5,8 @@ using Common.Dto;
 using Service.Interfaces;
 using Service.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using System.Drawing;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace CustomerService.webApi.Controllers
@@ -32,10 +34,31 @@ namespace CustomerService.webApi.Controllers
         }
         // GET: api/<OperatorController>
         [HttpGet]
+        [Authorize]
         // [Authorize(Roles = "Admin")]
-        public async Task<IEnumerable<OperatorDto>> Get()
+        public async Task<IActionResult> Get()
         {
-            return await service.GetAllAsync();
+            // 1. חילוץ התפקיד והחברה של המשתמש מתוך ה-Token (Claims)
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            Console.WriteLine($"DEBUG: User Role is: {userRole}",Color.AliceBlue);
+            var userCompanyClaim = User.FindFirst("CompanyId")?.Value;
+
+            // 2. בדיקה לוגית - אם המשתמש הוא מנהל מערכת, נביא את כל הטלפניות
+            if (userRole == "SystemManager")
+            {
+                var allOperators = await _operatorService.GetAllAsync();
+                return Ok(allOperators);
+            }
+
+            // 3. אם הוא מנהל חברה, נבדוק שיש לו מזהה חברה תקין ונחזיר רק את שלו
+            if (int.TryParse(userCompanyClaim, out int companyId))
+            {
+                var companyOperators = await _operatorService.GetByCompanyIdAsync(companyId);
+                return Ok(companyOperators);
+            }
+
+            // אם אין לו תפקיד מתאים או חברה תקינה - נחסום את הגישה
+            return Forbid("אין לך הרשאה לצפות בנתונים אלו.");
         }
 
         // GET api/<OperatorController>/5
@@ -118,6 +141,20 @@ namespace CustomerService.webApi.Controllers
         public async Task<IActionResult> GetWeeklyImprovement(int id)
         {
             var scores = await operatorService.GetWeeklyImprovementAsync(id);
+            return Ok(scores);
+        }
+
+        [HttpGet("GetAlldayScore/{id}")]
+        public async Task<IActionResult> GetAlldayScore(int id)
+        {
+            var scores = await operatorService.GetAllDayScoreAsync(id);
+            return Ok(scores);
+        }
+
+        [HttpGet("GetAllWeekScore/{id}")]
+        public async Task<IActionResult> GetAllWeekScore(int id)
+        {
+            var scores = await operatorService.GetAllWeekScoreAsync(id);
             return Ok(scores);
         }
 

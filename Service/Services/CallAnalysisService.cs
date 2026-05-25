@@ -269,8 +269,22 @@ public class CallAnalysisService
         }
 
         // ניתוח רגש לקוח (התחלה וסוף)
-        var customerStartText = string.Join(" ", customerSegments.Take(3).Select(s => s.Text));
-        var customerEndText = string.Join(" ", customerSegments.TakeLast(3).Select(s => s.Text));
+        //var customerStartText = string.Join(" ", customerSegments.Take(3).Select(s => s.Text));
+        //var customerEndText = string.Join(" ", customerSegments.TakeLast(3).Select(s => s.Text));
+
+        int totalCustomerSegments = customerSegments.Count;
+        int segmentsToTake = 3; // ברירת מחדל לשיחה רגילה או ארוכה
+
+        if (totalCustomerSegments < 6)
+        {
+            // אם השיחה קצרה, ניקח חצי מהמשפטים להתחלה וחצי לסוף (לפחות 1)
+            segmentsToTake = Math.Max(1, totalCustomerSegments / 2);
+        }
+
+        // שליפת הטקסטים על בסיס הכמות הדינמית שחושבה
+        var customerStartText = string.Join(" ", customerSegments.Take(segmentsToTake).Select(s => s.Text));
+        var customerEndText = string.Join(" ", customerSegments.TakeLast(segmentsToTake).Select(s => s.Text));
+        // ------------------------------------------------
 
         if (!string.IsNullOrWhiteSpace(customerStartText))
         {
@@ -320,30 +334,64 @@ public class CallAnalysisService
 
     private Score CalculateCallScore(Call call)
     {
+        List<string> notesBuilder = new List<string>();
+        string [] arr = ["good", "good", "good","good"];
         var score = new Score();
-
+        //סך הכל 20%
         // 1. ציון טון (מבוסס על סנטימנט הנציגה ו-ווליום)
         // אם הנציגה הייתה חיובית והווליום לא צורח - ציון גבוה
         //double toneBase = (call.OperatorSentiment == "Positive") ? 100 : 60;
-        double toneBase =(double)(100 - call.OperatorMaxVolume*10);
-        toneBase -= (double)(call.CustomerMaxVolume * 5);
+        if (call.OperatorMaxVolume > 1)
+            call.OperatorMaxVolume = 1;
+        double toneBase =(double)(100 - call.OperatorMaxVolume*100);
+        //toneBase -= (double)(call.CustomerMaxVolume * 5);
         //score.OperatorToneScore = (call.OperatorMaxVolume < 0.8) ? toneBase : toneBase - 20;
+        if (toneBase < 40)
+            arr[0] = "Neutral";
+        if (toneBase < 20)
+            notesBuilder.Add("טון דיבור גבוה מידי.");
+        if (call.OperatorSentiment == "Negative")
+        {
+            toneBase -= 50;
+            if(toneBase < 0) toneBase = 0;
+            notesBuilder.Add("פנייה בצורה לא נעימה ללקוח.");
+        }
         score.OperatorToneScore = toneBase;
 
+        //70%
         // 2. פתרון קונפליקטים (השינוי ברגש הלקוח)
         // חישוב: רגש סוף פחות רגש התחלה. אם הסוף חיובי יותר מההתחלה - הציון עולה.
         double emotionalShift = (call.CustomerSentimentEnd ?? 0) - (call.CustomerSentimentStart ?? 0);
-        score.ConflictResolutionScore = Math.Clamp(70 + (emotionalShift * 30), 0, 100);
+        if (emotionalShift > 5)
+        {
+            notesBuilder.Add("ניהול שיחה גרוע!!.");
+        }
+        var operatorSentiment = call.OperatorSentiment;
+        emotionalShift = 95 - (emotionalShift * 100);
+        if (emotionalShift >100)
+        {
+            emotionalShift = 100;
+            arr[1] = "good";
+            notesBuilder.Add("ניהול שיחה מעולה!!.");
+        }
+        
+        score.ConflictResolutionScore = emotionalShift;
 
+        //10%
         // 3. מקצועיות (למשל: מהירות דיבור אופטימלית)
         // נניח שבין 2 ל-3 מילים בשנייה זה אידיאלי
         double fast = 100 - (double)(call.OperatorWordsPerSecond * 10);
+        if (call.OperatorWordsPerSecond > 3|| call.OperatorWordsPerSecond < 0.5) notesBuilder.Add("שפה לא ברורה ונעימה ללקוח.");
         bool due = call.Duration <= TimeSpan.FromMinutes(3);
+        bool due10 = call.Duration <= TimeSpan.FromMinutes(10);
+        if (!due10) notesBuilder.Add("משך שיחה ארוך מידי.");
         score.ProfessionalismScore = fast+((due)?fast/100*10:0);
         //score.ProfessionalismScore = (call.OperatorWordsPerSecond >= 2.0 && call.OperatorWordsPerSecond <= 3.5) ? 100 : 70;
 
+        call.GeneralNotes = string.Join(" | ", notesBuilder);
+        if (call.GeneralNotes == "") { call.GeneralNotes = "את/ה היית נהדר/ת בשיחה"; };
         // 4. ציון סופי משוקלל
-        score.OverallScore = (score.OperatorToneScore + score.ConflictResolutionScore + score.ProfessionalismScore) / 3;
+        score.OverallScore = (score.OperatorToneScore*0.2 + score.ConflictResolutionScore*0.7 + score.ProfessionalismScore*0.1);
         double min = Math.Min((double)score.OperatorToneScore, (double)score.ConflictResolutionScore);
         min = Math.Min(min, (double)score.ProfessionalismScore);
         if (min == (double)score.ProfessionalismScore)
@@ -354,7 +402,7 @@ public class CallAnalysisService
         {
             if (min == (double)score.OperatorToneScore)
             {
-                score.ImprovementTips = ImprovementTipsEntity.Clarity;
+                score.ImprovementTips = ImprovementTipsEntity.ToneAndEmpathy;
             }
             else
             {

@@ -28,6 +28,7 @@ namespace Common.Dto
         public int? SumDailyCalls { get; set; }
         public DayOfWeek? DayName { get; set; }
 
+        public string? GeneralNotes { get; set; }
         public ImprovementTips? ImprovementTips { get; set; }
     }
 }
