@@ -10,60 +10,27 @@ namespace Service.Services
 {
     public class FolderWatcherWorker : BackgroundService
     {
-        private readonly string _rootPath = @"C:\Calls";
-        private readonly string _inboxPath = @"C:\Calls\Incoming";
-        private readonly string _processedPath = @"C:\Calls\Done";
+        //private readonly string _rootPath = @"C:\Calls";
+        //private readonly string _inboxPath = @"C:\Calls\Incoming";
+        //private readonly string _processedPath = @"C:\Calls\Done";
         private readonly IServiceProvider _serviceProvider;
 
         public FolderWatcherWorker(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            Directory.CreateDirectory(_inboxPath);
-            Directory.CreateDirectory(_processedPath);
+            //Directory.CreateDirectory(_inboxPath);
+            //Directory.CreateDirectory(_processedPath);
         }
-
-        //protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        //{
-        //    while (!stoppingToken.IsCancellationRequested)
-        //    {
-        //        // סריקת כל תיקיות המשנה בתוך תיקיית השיחות הראשית
-        //        var operatorFolders = Directory.GetDirectories(_rootPath);
-
-        //        foreach (var folderPath in operatorFolders)
-        //        {
-        //            // שם התיקייה הוא ה-ID של הטלפנית
-        //            if (int.TryParse(Path.GetFileName(folderPath), out int operatorId))
-        //            {
-        //                var wavFiles = Directory.GetFiles(folderPath, "*.wav");
-        //                foreach (var file in wavFiles)
-        //                {
-        //                    using (var scope = _serviceProvider.CreateScope())
-        //                    {
-        //                        var analysisService = scope.ServiceProvider.GetRequiredService<CallAnalysisService>();
-        //                        // שולחים גם את ה-OperatorId לניתוח
-        //                        //await analysisService.ProcessFullCallChain(file, operatorId);
-        //                    }
-
-        //                    // העברה לתיקיית 'בוצע' בתוך תיקיית הטלפנית
-        //                    MoveToProcessed(file, folderPath);
-        //                }
-        //            }
-        //        }
-        //        await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
-        //    }
-        //}
-
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // לוג לבדיקה שהשירות התחיל
             Console.WriteLine("Worker started at: " + DateTime.Now);
             while (!stoppingToken.IsCancellationRequested)
             {
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var companyService = scope.ServiceProvider.GetRequiredService<CompanyService>();
-                    var companies = await companyService.GetAllAsync(); // שליפת החברות מה-DB
+                    var companies = await companyService.GetAllAsync(); // companies from-DB
 
                     foreach (var company in companies)
                     {
@@ -77,7 +44,7 @@ namespace Service.Services
                     }
                 }
 
-                // חישוב זמן עד לריצה הבאה (למשל ב-24:00)
+                // culculate the next run time
                 await Task.Delay(CalculateDelayUntilNextRun(), stoppingToken);
             }
         }
@@ -93,23 +60,31 @@ namespace Service.Services
 
         private async Task ProcessOperatorFolder(string folderPath, int companyId, IServiceScope scope)
         {
-            if (int.TryParse(Path.GetFileName(folderPath), out int operatorId))
-            {
-                var wavFiles = Directory.GetFiles(folderPath, "*.wav");
-                var analysisService = scope.ServiceProvider.GetRequiredService<CallAnalysisService>();
+            string operatorEmail = Path.GetFileName(folderPath);
 
-                foreach (var file in wavFiles)
-                {
+            var operatorService = scope.ServiceProvider.GetRequiredService<OperatorService>();
+
+            int? opId = await operatorService.GetIdByEmailAsync(operatorEmail);
+
+            if (opId == null)
+            {
+                Console.WriteLine($"Warning: No operator found for email {operatorEmail}");
+                return;
+            }
+
+            var wavFiles = Directory.GetFiles(folderPath, "*.wav");
+            var analysisService = scope.ServiceProvider.GetRequiredService<CallAnalysisService>();
+
+            foreach (var file in wavFiles)
+            {
                 try
                 {
-                    await analysisService.ProcessFullCallChain(file, operatorId);
+                    await analysisService.ProcessFullCallChain(file, opId.Value);
                     MoveToProcessed(file, folderPath);
                 }
                 catch (Exception ex)
                 {
-                    // מדפיס שגיאה אבל ממשיך לקובץ הבא!
                     Console.WriteLine($"Error processing file {file}: {ex.Message}");
-                }
                 }
             }
         }

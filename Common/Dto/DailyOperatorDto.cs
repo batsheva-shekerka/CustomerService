@@ -30,5 +30,10 @@ namespace Common.Dto
 
         public string? GeneralNotes { get; set; }
         public ImprovementTips? ImprovementTips { get; set; }
+
+        public bool? IsToneAboveCompanyAvg { get; set; }
+        public bool? IsConflictAboveCompanyAvg { get; set; }
+        public bool? IsProfessionalismAboveCompanyAvg { get; set; }
+        public bool? IsOverallAboveCompanyAvg { get; set; }
     }
 }

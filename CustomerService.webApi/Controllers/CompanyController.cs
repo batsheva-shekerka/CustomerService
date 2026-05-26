@@ -4,6 +4,7 @@ using Repository.Entities;
 using Repository.Interfaces;
 using Service.Interfaces;
 using Service.Services;
+using Microsoft.AspNetCore.Authorization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -26,6 +27,7 @@ namespace CustomerService.webApi.Controllers
         }
         // GET: api/<CompanyController>
         [HttpGet]
+        [Authorize(Roles = "Admin,SystemManager")]
         public async Task<ActionResult<IEnumerable<CompanyDto>>> Get()
         {
             var companies= await service.GetAllAsync() ;
@@ -34,6 +36,7 @@ namespace CustomerService.webApi.Controllers
 
         // GET api/<CompanyController>/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,SystemManager")]
         public async Task<CompanyDto> Get(int id)
         {
             return await service.GetByIdAsync(id);
@@ -41,6 +44,7 @@ namespace CustomerService.webApi.Controllers
 
         // POST api/<CompanyController>
         [HttpPost]
+        [Authorize(Roles = "SystemManager")]
         public async Task<IActionResult> Post([FromBody] CompanyDto company)
         {
            var newCompany= await service.AddAsync(company);
@@ -49,6 +53,7 @@ namespace CustomerService.webApi.Controllers
 
         // PUT api/<CompanyController>/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,SystemManager")]
         public async Task<IActionResult> Put(int id, [FromBody] CompanyDto company)
         {
             var newCompany = await service.UpdateAsync(id, company);
@@ -57,6 +62,7 @@ namespace CustomerService.webApi.Controllers
 
         // DELETE api/<CompanyController>/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SystemManager")]
         public async Task<IActionResult> Delete(int id)
         {
             await service.DeleteAsync(id);
@@ -65,6 +71,7 @@ namespace CustomerService.webApi.Controllers
         }
 
         [HttpGet("GetWeeklyImprovement/{id}")]
+        [Authorize(Roles = "Admin,SystemManager")]
         public async Task<IActionResult> GetWeeklyImprovement(int id)
         {
             var scores = await companyService.GetWeeklyImprovementAsync(id);

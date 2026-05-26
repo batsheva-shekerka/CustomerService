@@ -46,22 +46,7 @@ namespace Repository.Repositories
             ctx.Scores.Update(item);
             await ctx.SaveChangesAsync();
             return item;
-        }
-
-        //Task<IEnumerable<ScoreDto>> GetDailyImprovementAsync(int id)
-        //{
-        //    var today = DateTime.Today;
-
-        //    var dailyData = await ctx.Scores
-        //       .Where(c => c.CallId == id
-        //                && c.Score != null
-        //                && c.CallDate.Date == today) // השוואת תאריך בלבד
-        //       .Select(g => g.Score.ImprovementTips) // שליפת הערך עצמו
-        //       .ToListAsync();
-
-        //    return dailyData; // המרה ל-object כדי להתאים לחתימת הפונקציה
-        //}
-
+        }      
     }
 
 }

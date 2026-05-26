@@ -10,6 +10,8 @@ namespace Repository.Interfaces
 {
     public interface IOperatorRepository
     {
+        Task<Operator> GetById(int id);
+
         Task<IEnumerable<Operator>> GetByCompanyIdAsync(int id);
 
         Task<IEnumerable<Score>> GetAllMonthScoreAsync(int id);

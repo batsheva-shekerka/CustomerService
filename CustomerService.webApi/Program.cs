@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using Repository.Interfaces;
 using System.Text;
 using Service.Services;
+using CustomerService.webApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-//הוספת אבטחה לסווגר
+//add security definition for swagger
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "securityLessonWebApi", Version = "v1" });
@@ -44,7 +45,7 @@ builder.Services.AddSwaggerGen(c =>
             });
 });
 
-//בעת האימות
+//in autherntication we need to add the jwt bearer and the parameters for the token validation
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
              .AddJwtBearer(option =>
              option.TokenValidationParameters = new TokenValidationParameters
@@ -86,6 +87,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseCors("AllowReactApp");
 
 // Configure the HTTP request pipeline.
@@ -96,6 +99,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

@@ -27,12 +27,8 @@ namespace Service.Services
         {
             services.AddRepository();
             services.AddScoped<Iservice<OperatorDto>, OperatorService>();
-            //services.AddScoped<IsExist<Operator>, OperatorService>();
             services.AddScoped<OperatorService>();
-            //services.AddScoped<IsExist<Operator>, OperatorService>();
             services.AddScoped<IAuthService, AuthService>();
-            //services.AddScoped<IsExist<Operator>, AuthService>();
-            //services.AddScoped<Iservice<CallDto>, CallService>();
             services.AddScoped<Iservice<CompanyDto>, CompanyService>();
             services.AddScoped<CompanyService>();
             services.AddScoped<Iservice<CallDto>, CallService>();

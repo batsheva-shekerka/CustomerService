@@ -18,6 +18,8 @@ using System.Threading.Tasks;
 using DataContext;
 using Common.Enums;
 using Microsoft.CognitiveServices.Speech.Transcription;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.Design;
 
 namespace Service.Services
 {
@@ -60,7 +62,7 @@ namespace Service.Services
             return op;
         }
 
-        //יצירת טוקן
+        //generate token
         public string GenerateToken(Operator op)
         {
             if (op == null)
@@ -89,7 +91,15 @@ namespace Service.Services
 
         }
 
+        public async Task<int?> GetIdByEmailAsync(string email)
+        {
+            var op = await _context.Operators
+                .Where(o => o.Mail == email ) 
+                .Select(o => o.OperatorId) //
+                .FirstOrDefaultAsync();
 
+            return op != 0 ? op : null;
+        }
 
         public async Task<OperatorDto> GetByIdAsync(int id) 
         {
@@ -107,17 +117,38 @@ namespace Service.Services
         {
             string passwordFromUser = item.PasswordHash;
 
-            // יצירת ה-Hash (ההצפנה)
+            // Hash 
             string hashedPath = BCrypt.Net.BCrypt.HashPassword(passwordFromUser);
 
-            // עכשיו שומרים את hashedPath בבסיס הנתונים
+            //keep the hashedPath 
 
             item.PasswordHash = hashedPath;
            
             var operatorEntity = await repository.AddAsync(mapper.Map<Operator>(item));
+            var company = await _context.Companies.FindAsync(item.CompanyId);
+            Console.WriteLine("company id"+item.CompanyId);
+            if (company != null && !string.IsNullOrWhiteSpace(company.AudioFolderRoute))
+            {
+                try
+                {
+                    Console.WriteLine("company id" + item.OperatorId);
+                    // 3. יצירת הנתיב המלא - לדוגמה: C:\Calls\CompanyA\123
+                    string newOperatorFolderPath = Path.Combine(company.AudioFolderRoute, item.Mail.ToString());
+
+                    //create the file
+                    Directory.CreateDirectory(newOperatorFolderPath);                 
+                }
+                catch (Exception ex)
+                {
+                    
+                    Console.WriteLine($"Failed to create folder for operator {item.OperatorId}: {ex.Message}");
+                    // כאן אפשר להוסיף כתיבה ללוג (Logger)
+                }
+            }
 
             return mapper.Map<OperatorDto>(operatorEntity);
         }
+    
        public async Task<OperatorDto> UpdateAsync(int id, OperatorDto item) 
         {
             var op = _context.Operators.FirstOrDefault(x => x.OperatorId == id);
@@ -164,18 +195,17 @@ namespace Service.Services
         {
             var scores = await operatorRepository.GetWeeklyImprovementAsync(id);
             return scores.ToList();
-            //return mapper.Map<List<DailyOperatorDto>>(scores);
         }
 
         public async Task<IEnumerable<DailyOperatorDto>> GetAllWeekScoreAsync(int id)
         {
             var scores = await operatorRepository.GetAllWeekScoreAsync(id);
-            return scores.ToList(); // אין צורך ב-mapper.Map
+            return scores.ToList(); 
         }
         public async Task<IEnumerable<DailyOperatorDto>> GetAllDayScoreAsync(int id)
         {
             var scores = await operatorRepository.GetAlldayScoreAsync(id);
-            return scores.ToList(); // אין צורך ב-mapper.Map
+            return scores.ToList();
         }
 
 

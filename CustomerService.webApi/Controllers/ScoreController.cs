@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Repository.Entities;
 using Repository.Interfaces;
 
@@ -18,6 +19,8 @@ namespace CustomerService.webApi.Controllers
         }
         // GET: api/<ScoreController>
         [HttpGet]
+        [Authorize(Roles = "SystemManager")]
+
         public async Task<IEnumerable<Score>> Get()
         {
             return await repository.GetAllAsync();
@@ -25,6 +28,7 @@ namespace CustomerService.webApi.Controllers
 
         // GET api/<ScoreController>/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
         public async Task<Score> Get(int id)
         {
             return await repository.GetByIdAsync(id);
@@ -32,6 +36,7 @@ namespace CustomerService.webApi.Controllers
 
         // POST api/<ScoreController>
         [HttpPost]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
         public async Task Post([FromBody] Score score)
         {
             await repository.AddAsync(score);
@@ -39,6 +44,8 @@ namespace CustomerService.webApi.Controllers
 
         // PUT api/<ScoreController>/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,SystemManager")]
+
         public async Task Put(int id, [FromBody] Score score)
         {
             await repository.UpdateAsync(id,score);
@@ -46,6 +53,7 @@ namespace CustomerService.webApi.Controllers
 
         // DELETE api/<ScoreController>/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,SystemManager")]
         public async Task Delete(int id)
         {
             await repository.DeleteAsync(id);

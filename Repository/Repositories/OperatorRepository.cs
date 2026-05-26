@@ -16,9 +16,11 @@ namespace Repository.Repositories
     {
 
         private readonly IContext ctx;
-        public OperatorRepository(IContext context)
+        private readonly ICompanyRepository _companyRepository;
+        public OperatorRepository(IContext context, ICompanyRepository companyRepository)
         {
             this.ctx = context;
+            _companyRepository = companyRepository;
         }
         public async Task<Operator> AddAsync(Operator item)
         {
@@ -43,6 +45,13 @@ namespace Repository.Repositories
 
         }
 
+        public  Task<Operator> GetById(int id)
+        {
+            return  ctx.Operators.FirstOrDefaultAsync(x => x.OperatorId == id);
+
+        }
+
+
         public async Task<IEnumerable<Operator>> GetByCompanyIdAsync(int id)
         {
             return await ctx.Operators.Where(x => x.CompanyId == id).ToListAsync();
@@ -58,11 +67,11 @@ namespace Repository.Repositories
         //retrieving all scores for all calls -- gonna be weekly
         public async Task<IEnumerable<Score>> GetAllMonthScoreAsync(int id)
         {
-            // שליפת הציונים של כל השיחות השייכות למפעיל הספציפי
+            // retrieving all scores to the spesific operator
             var scores = await ctx.Calls
                 .Where(c => c.OperatorId == id && c.Score != null)
                 .OrderBy(c => c.CallDate)
-                .Select(c => c.Score) // כאן השינוי: אנחנו בוחרים את אובייקט ה-Score המלא
+                .Select(c => c.Score)
                 .ToListAsync();
 
             return scores;
@@ -71,9 +80,9 @@ namespace Repository.Repositories
         {
             var today = todayy ?? DateTime.Today;
             var tomorrow = today.AddDays(1);
-            var oneWeekAgo = today.AddDays(-7); // הגדרת נקודת ההתחלה - שבוע אחורה
+            var oneWeekAgo = today.AddDays(-7); // define week ago
 
-            // ספירת כל השיחות של הטלפנית במהלך כל השבוע החולף
+            //count all the calls
             var countOfWeeklyCalls = await ctx.Calls
                 .Where(c => c.OperatorId == id
                        && c.Score != null
@@ -86,7 +95,7 @@ namespace Repository.Repositories
                        && c.Score != null
                        && c.CallDate >= oneWeekAgo
                        && c.CallDate < tomorrow)
-                .Select(g => new DailyOperatorDto // שימוש ב-DTO הקיים
+                .Select(g => new DailyOperatorDto
                 {
                     OperatorToneScore = g.Score.OperatorToneScore,
                     ConflictResolutionScore = g.Score.ConflictResolutionScore,
@@ -94,10 +103,9 @@ namespace Repository.Repositories
                     OverallScore = g.Score.OverallScore,
                     ScoreId = g.Score.ScoreId,
                     GeneralNotes=g.GeneralNotes,
-                    // שימי לב: השדה הזה יציג כעת את סך כל השיחות השבועיות 
+                    //count of weekly calls
                     SumDailyCalls = countOfWeeklyCalls,
-
-                    // שליפת יום בשבוע דינמי לפי תאריך השיחה עצמה
+                    //set the dayname
                     DayName = g.CallDate.DayOfWeek
                 })
                 .ToListAsync();
@@ -116,7 +124,7 @@ namespace Repository.Repositories
                        && c.Score != null
                        && c.CallDate >= today
                        && c.CallDate < tomorrow)
-                .Select(g => new DailyOperatorDto // יצירה ישירה של ה-DTO
+                .Select(g => new DailyOperatorDto 
                 {                    
                     OperatorToneScore = g.Score.OperatorToneScore,
                     ConflictResolutionScore = g.Score.ConflictResolutionScore,
@@ -153,40 +161,59 @@ namespace Repository.Repositories
 
         public async Task<IEnumerable<DailyOperatorDto>> GetAverageDayScoreAsync(int id, DateTime? todayy = null)
         {
+
             var today = todayy ?? DateTime.Today;
             var tomorrow = today.AddDays(1);
+            var op = await GetByIdAsync(id);
+            if (op == null) return Enumerable.Empty<DailyOperatorDto>();
+            var avgCompany =(await _companyRepository.GetAverageDayScoreAsync(op.CompanyId))?.FirstOrDefault();
 
-            return await ctx.Calls
+           var operatorScores = await ctx.Calls
                 .Where(c => c.OperatorId == id
                        && c.Score != null
                        && c.CallDate >= today
                        && c.CallDate < tomorrow)
                 .GroupBy(c => new { c.CallDate.Year, c.CallDate.Month, c.CallDate.Day })
-                .Select(g => new DailyOperatorDto // יצירה ישירה של ה-DTO
+                .Select(g => new DailyOperatorDto
                 {
-                    //Day = g.Key.Day + "/" + g.Key.Month,
                     OperatorToneScore = g.Average(x => x.Score.OperatorToneScore),
                     ConflictResolutionScore = g.Average(x => x.Score.ConflictResolutionScore),
                     ProfessionalismScore = g.Average(x => x.Score.ProfessionalismScore),
                     OverallScore = g.Average(x => x.Score.OverallScore),
                     SumDailyCalls = g.Count(),
-                    DayName = new DateTime(g.Key.Year, g.Key.Month, g.Key.Day).DayOfWeek
-                })
+                    DayName = new DateTime(g.Key.Year, g.Key.Month, g.Key.Day).DayOfWeek,
+                })                    
                 .ToListAsync();
-        }
+            return operatorScores.Select(g => new DailyOperatorDto
+            {
+                OperatorToneScore = g.OperatorToneScore,
+                ConflictResolutionScore = g.ConflictResolutionScore,
+                ProfessionalismScore = g.ProfessionalismScore,
+                OverallScore = g.OverallScore,
+                SumDailyCalls = g.SumDailyCalls,
+                DayName = g.DayName,
+
+                // השוואת הציונים של האופרטור מול ממוצע החברה שחזר מה-CompanyRepository
+                // (כאן מומלץ לוודא מהם השמות המדויקים של השדות שחוזרים מ-companyAvg)
+                IsToneAboveCompanyAvg = avgCompany != null && g.OperatorToneScore >= avgCompany.OperatorToneScore,
+                IsConflictAboveCompanyAvg = avgCompany != null && g.ConflictResolutionScore >= avgCompany.ConflictResolutionScore,
+                IsProfessionalismAboveCompanyAvg = avgCompany != null && g.ProfessionalismScore >= avgCompany.ProfessionalismScore,
+                IsOverallAboveCompanyAvg = avgCompany != null && g.OverallScore >= avgCompany.OverallScore
+            }).ToList();
+        
+    }
         public async Task<IEnumerable<object>> GetDailyImprovementTips(int id)
         {
-            // הגדרת תאריך היעד מראש משפרת לעיתים ביצועים ב-EF
             var today = DateTime.Today;
 
             var dailyData = await ctx.Calls
                .Where(c => c.OperatorId == id
                         && c.Score != null
-                        && c.CallDate.Date == today) // השוואת תאריך בלבד
-               .Select(g => g.Score.ImprovementTips) // שליפת הערך עצמו
+                        && c.CallDate.Date == today) 
+               .Select(g => g.Score.ImprovementTips)
                .ToListAsync();
 
-            return dailyData.Cast<object>(); // המרה ל-object כדי להתאים לחתימת הפונקציה
+            return dailyData.Cast<object>(); 
         }
 
         public async Task<IEnumerable<DailyOperatorDto>> GetWeeklyImprovementAsync(int id)

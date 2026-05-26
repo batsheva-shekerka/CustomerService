@@ -7,6 +7,7 @@ using Service.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Drawing;
+using CustomerService.webApi.Exceptions;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace CustomerService.webApi.Controllers
@@ -17,52 +18,47 @@ namespace CustomerService.webApi.Controllers
     {
         private readonly Iservice<OperatorDto> service;
         private readonly IOperatorService operatorService;
-        //private readonly IRepository<Operator> repository;
-        //private readonly IsExist<Operator> _isExist;
         private readonly OperatorService _operatorService;
 
-        //private readonly IAuthService _authService;
 
-        // כאן אנחנו מקבלים את הכל מהמערכת
-        public OperatorController(Iservice<OperatorDto> service, OperatorService operatorService,IOperatorService operatorService1)//, IAuthService authService, IsExist<Operator> isExist
+        public OperatorController(Iservice<OperatorDto> service, OperatorService operatorService,IOperatorService operatorService1)
         {
             this.service = service;
-            //this._isExist = isExist;
             this._operatorService = operatorService;
             this.operatorService = operatorService1;
-            //this._authService = authService;
         }
         // GET: api/<OperatorController>
         [HttpGet]
-        [Authorize]
-        // [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SystemManager")]
         public async Task<IActionResult> Get()
         {
-            // 1. חילוץ התפקיד והחברה של המשתמש מתוך ה-Token (Claims)
+            // 1.from-Token (Claims)
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             Console.WriteLine($"DEBUG: User Role is: {userRole}",Color.AliceBlue);
             var userCompanyClaim = User.FindFirst("CompanyId")?.Value;
 
-            // 2. בדיקה לוגית - אם המשתמש הוא מנהל מערכת, נביא את כל הטלפניות
             if (userRole == "SystemManager")
             {
                 var allOperators = await _operatorService.GetAllAsync();
                 return Ok(allOperators);
             }
 
-            // 3. אם הוא מנהל חברה, נבדוק שיש לו מזהה חברה תקין ונחזיר רק את שלו
+            if(userRole == "Admin")
+            {          
             if (int.TryParse(userCompanyClaim, out int companyId))
             {
                 var companyOperators = await _operatorService.GetByCompanyIdAsync(companyId);
                 return Ok(companyOperators);
             }
-
-            // אם אין לו תפקיד מתאים או חברה תקינה - נחסום את הגישה
+            }
+            //else
             return Forbid("אין לך הרשאה לצפות בנתונים אלו.");
         }
 
         // GET api/<OperatorController>/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
+
         public async Task<OperatorDto> Get(int id)
         {
             return await service.GetByIdAsync(id);
@@ -70,22 +66,36 @@ namespace CustomerService.webApi.Controllers
 
         // POST api/<OperatorController>
         [HttpPost]
+        [Authorize(Roles = "Admin,SystemManager")]
+
         public async Task<IActionResult> Post([FromBody] OperatorDto op)
         {
+            var isexist =(await service.GetAllAsync())?.Any(x=>x.Mail==op.Mail);
+
+            if (isexist ==true)
+                throw new DuplicateException("האימייל הזה כבר קיים במערכת, עליך לבחור מייל אחר.");
             var newop = await service.AddAsync(op);
             return Ok(newop);
         }
 
         // PUT api/<OperatorController>/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
+
         public async Task<IActionResult> Put(int id, [FromBody] OperatorDto op)
         {
+            var isexist = (await service.GetAllAsync())?.Any(x => x.Mail == op.Mail);
+
+            if (isexist == true)
+                throw new DuplicateException("האימייל הזה כבר קיים במערכת, עליך לבחור מייל אחר.");
             var newop = await service.UpdateAsync(id, op);
             return Ok(newop);
         }
 
         // DELETE api/<OperatorController>/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,SystemManager")]
+
         public async Task<IActionResult> Delete(int id)
         {
             await service.DeleteAsync(id);
@@ -96,21 +106,21 @@ namespace CustomerService.webApi.Controllers
         public IActionResult Login([FromBody] Login loginData)
         {
 
-            // 1. בדיקה מול ה-Repository שהמשתמש קיים (דילגתי על זה לצורך הדוגמה)
-            //האם המשתמש קיים וכן אימות הסיסמא
+            //if the user existing ang the passworad is correctly
             var o = _operatorService.Exist(loginData);
-            // 2. בדיקה האם המשתמש נמצא
+            // 2. if exist
             if (o == null)
             {
-                // אם לא נמצא (סיסמה שגויה או מייל לא קיים), מחזירים שגיאה מוסדרת ולא קורסים
+                
                 return Unauthorized("אימייל או סיסמה שגויים");
             }
-            // 2. אם המשתמש תקין - קוראים לסרביס לייצר טוקן
+            // 2. if valey return token
             var token = _operatorService.GenerateToken(o);//, "User"
             return Ok(new { token = token, user = o });
         }
 
         [HttpGet("GetAllMonthScore/{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
         public async Task<IActionResult> GetAllMonthScore(int id)
         {
             var scores = await operatorService.GetAllMonthScoreAsync(id);
@@ -118,6 +128,8 @@ namespace CustomerService.webApi.Controllers
         }
 
         [HttpGet("GetMonthlyImprovement/{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
+
         public async Task<IActionResult> GetMonthlyImprovement(int id)
         {
             var scores = await operatorService.GetMonthlyImprovementAsync(id);
@@ -125,12 +137,16 @@ namespace CustomerService.webApi.Controllers
         }
 
         [HttpGet("GetDalyImprovementTips/{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
+
         public async Task<IActionResult> GetDalyImprovementTips(int id)
         {
             var scores = await operatorService.GetDailyImprovementTips(id);
             return Ok(scores);
         }
         [HttpGet("GetAverageDayScore/{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
+
         public async Task<IActionResult> GetAverageDayScore(int id)
         {
             var scores = await operatorService.GetAverageDayScoreAsync(id);
@@ -138,6 +154,8 @@ namespace CustomerService.webApi.Controllers
         }
 
         [HttpGet("GetWeeklyImprovement/{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
+
         public async Task<IActionResult> GetWeeklyImprovement(int id)
         {
             var scores = await operatorService.GetWeeklyImprovementAsync(id);
@@ -145,6 +163,8 @@ namespace CustomerService.webApi.Controllers
         }
 
         [HttpGet("GetAlldayScore/{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
+
         public async Task<IActionResult> GetAlldayScore(int id)
         {
             var scores = await operatorService.GetAllDayScoreAsync(id);
@@ -152,6 +172,8 @@ namespace CustomerService.webApi.Controllers
         }
 
         [HttpGet("GetAllWeekScore/{id}")]
+        [Authorize(Roles = "Admin,SystemManager,Operator")]
+
         public async Task<IActionResult> GetAllWeekScore(int id)
         {
             var scores = await operatorService.GetAllWeekScoreAsync(id);
